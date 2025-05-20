@@ -1,4 +1,4 @@
-# Hono x Better Auth
+# 🔥 Hono x Better Auth
 Welcome to the **Hono x Better Auth** project.   
 This project combines the power of Hono, Better Auth, and Drizzle ORM to provide a robust and scalable authentication solution.
 
