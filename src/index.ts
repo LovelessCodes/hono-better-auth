@@ -10,13 +10,14 @@ const app = new Hono();
 app.get("/", (c) => {
 	return c.json({
 		message: "Hello Hono x Better Auth!",
-		description: "This is a simple example of a Hono x Better Auth application, you can use it as a starting point for your own application.",
+		description:
+			"This is a simple example of a Hono x Better Auth application, you can use it as a starting point for your own application.",
 		links: [
 			{
 				text: "Go to the Authentication API Documentation",
 				href: new URL("/api/auth/reference", c.req.url).href,
-			}
-		]
+			},
+		],
 	});
 });
 
