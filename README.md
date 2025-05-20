@@ -9,6 +9,11 @@ This project combines the power of Hono, Better Auth, and Drizzle ORM to provide
 
 ## Installation
 
+**Optional**: 
+```sh
+bunx gitpick LovelessCodes/hono-better-auth.git
+```
+
 Follow these steps to set up and run the project:
 
 1. **Install Dependencies**:
