@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { openAPI } from "better-auth/plugins";
 import { db } from "./db";
 import * as authSchema from "./db/auth-schema";
 
@@ -77,6 +78,7 @@ export const auth = betterAuth({
 		autoSignIn: true,
 		minPasswordLength: 8,
 	},
+	plugins: [openAPI()],
 	trustedOrigins: process.env.ALLOWED_ORIGINS?.split(",") || [],
 	database: drizzleAdapter(db, {
 		provider: "sqlite",
