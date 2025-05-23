@@ -1,4 +1,6 @@
 # 🔥 Hono x Better Auth
+[![Hono x Better Auth - Demo Status Badge](https://kener.less.cx/badge/Hono_Project/status?labelColor=&color=&style=for-the-badge&label=Hono%20x%20Better%20Auth%20-%20Demo) ![Hono x Better Auth - Demo Animated Liveness Badge](https://kener.less.cx/badge/Hono_Project/dot?animate=ping)](https://hono.less.cx)
+
 Welcome to the **Hono x Better Auth** project.   
 This project combines the power of Hono, Better Auth, and Drizzle ORM to provide a robust and scalable authentication solution.
 
