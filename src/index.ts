@@ -38,10 +38,6 @@ app.use(
 	}),
 );
 
-app.on(["GET"], "/api/auth-providers", (c) => {
-	return c.json(Object.keys(configuredProviders));
-});
-
 app.on(["POST", "GET"], "/api/auth/**", (c) => {
 	return auth.handler(c.req.raw);
 });
