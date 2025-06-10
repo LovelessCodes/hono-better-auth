@@ -89,7 +89,7 @@ export const configuredProviders = providers.reduce<
  *     };
  *   },
  * } satisfies BetterAuthClientPlugin;
- * 
+ *
  * export const authClient = createAuthClient({
  *   plugins: [socialProvidersClient()],
  * });
