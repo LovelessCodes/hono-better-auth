@@ -121,8 +121,8 @@ export const socialProviders = () => ({
 										},
 									},
 								},
-							}
-						}
+							},
+						},
 					},
 				},
 			},
