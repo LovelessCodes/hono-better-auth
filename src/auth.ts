@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { openAPI } from "better-auth/plugins";
+import { createAuthEndpoint, openAPI } from "better-auth/plugins";
 import { db } from "./db";
 import * as authSchema from "./db/auth-schema";
 
@@ -69,6 +69,48 @@ export const configuredProviders = providers.reduce<
 	return acc;
 }, {});
 
+/**
+ * Better-Auth Plugin that returns the list of available social providers
+ *
+ * Usage on client:
+ * ```ts
+ * const socialProvidersClient = () => {
+ *   id: "social-providers-client"
+ *   $InferServerPlugin: {} as ReturnType<typeof socialProviders>
+ *   getActions: ($fetch) => {
+ *     return {
+ *       getSocialProviders: async (fetchOptions?: BetterFetchOption) => {
+ *         const res = $fetch("/social-providers", {
+ *           method: "GET",
+ *           ...fetchOptions,
+ *         });
+ *         return res.then((res) => res.data as string[]);
+ *       },
+ *     };
+ *   },
+ * } satisfies BetterAuthClientPlugin;
+ * 
+ * export const authClient = createAuthClient({
+ *   plugins: [socialProvidersClient()],
+ * });
+ * ```
+ *
+ * @returns BetterAuthServerPlugin
+ */
+export const socialProviders = () => ({
+	id: "social-providers-plugin",
+	endpoints: {
+		getSocialProviders: createAuthEndpoint(
+			"/social-providers",
+			{
+				method: "GET",
+			},
+			async (ctx) =>
+				ctx.json(ctx.context.socialProviders.map((p) => p.name.toLowerCase())),
+		),
+	},
+});
+
 export const auth = betterAuth({
 	baseURL: process.env.BETTER_AUTH_URL || "http://localhost:8558",
 	secret: process.env.BETTER_AUTH_SECRET || undefined,
@@ -78,8 +120,11 @@ export const auth = betterAuth({
 		autoSignIn: true,
 		minPasswordLength: 8,
 	},
-	plugins: [openAPI()],
-	trustedOrigins: process.env.ALLOWED_ORIGINS?.split(",") || [],
+	plugins: [openAPI(), socialProviders()],
+	trustedOrigins: [
+		process.env.BETTER_AUTH_URL || "http://localhost:8558",
+		...(process.env.ALLOWED_ORIGINS?.split(",") || []),
+	],
 	database: drizzleAdapter(db, {
 		provider: "sqlite",
 		schema: authSchema,
