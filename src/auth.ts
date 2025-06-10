@@ -104,6 +104,27 @@ export const socialProviders = () => ({
 			"/social-providers",
 			{
 				method: "GET",
+				metadata: {
+					openapi: {
+						description: "Returns the list of available social providers",
+						responses: {
+							200: {
+								description: "Success",
+								content: {
+									"application/json": {
+										schema: {
+											type: "array",
+											items: {
+												type: "string",
+											},
+											description: "List of available social providers",
+										},
+									},
+								},
+							}
+						}
+					},
+				},
 			},
 			async (ctx) =>
 				ctx.json(ctx.context.socialProviders.map((p) => p.name.toLowerCase())),
