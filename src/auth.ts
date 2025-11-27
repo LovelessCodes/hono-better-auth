@@ -40,205 +40,117 @@ const providers = [
 	"zoom",
 ];
 
+type ProviderConfig = {
+	clientId?: string;
+	clientSecret?: string;
+	appBundleIdentifier?: string;
+	tenantId?: string;
+	requireSelectAccount?: boolean;
+	clientKey?: string;
+	issuer?: string;
+	domain?: string;
+	region?: string;
+	userPoolId?: string;
+	environment?: string;
+	team?: string;
+	authority?: string;
+	requestShippingAddress?: boolean;
+	loginUrl?: string;
+	redirectUri?: string;
+	permissions?: number;
+	scopes?: string[];
+	fields?: string[];
+	prompt?: string;
+	accessType?: string;
+	disabledDefaultScope?: boolean;
+	scope?: string[];
+	duration?: string;
+};
+
+const getEnv = (provider: string, key: string) =>
+	process.env[`${provider.toUpperCase()}_${key}`];
+
+const parseList = (value: string | undefined) =>
+	value ? value.split(",").map((s) => s.trim()) : undefined;
+
 export const configuredProviders = providers.reduce<
-	Record<
-		string,
-		{
-			clientId?: string;
-			clientSecret?: string;
-			appBundleIdentifier?: string;
-			tenantId?: string;
-			requireSelectAccount?: boolean;
-			clientKey?: string;
-			issuer?: string;
-			domain?: string;
-			region?: string;
-			userPoolId?: string;
-			environment?: string;
-			team?: string;
-			authority?: string;
-			requestShippingAddress?: boolean;
-			loginUrl?: string;
-			redirectUri?: string;
-			permissions?: number; // specify type number or bitwise value
-			scopes?: string[];
-			fields?: string[];
-			prompt?: string;
-			accessType?: string;
-			disabledDefaultScope?: boolean;
-			scope?: string[];
-			duration?: string;
-		}
-	>
+	Record<string, ProviderConfig>
 >((acc, provider) => {
-	const id = process.env[`${provider.toUpperCase()}_CLIENT_ID`];
-	const secret = process.env[`${provider.toUpperCase()}_CLIENT_SECRET`];
-	if (!Object.keys(acc).includes(provider)) {
-		acc[provider] = {
-			clientId: id,
-			clientSecret: secret,
-		};
+	const env = (key: string) => getEnv(provider, key);
+
+	const config: ProviderConfig = {
+		clientId: env("CLIENT_ID"),
+		clientSecret: env("CLIENT_SECRET"),
+	};
+
+	switch (provider) {
+		case "apple":
+			if (env("APP_BUNDLE_IDENTIFIER"))
+				config.appBundleIdentifier = env("APP_BUNDLE_IDENTIFIER");
+			break;
+		case "gitlab":
+			if (env("ISSUER")) config.issuer = env("ISSUER");
+			break;
+		case "google":
+			if (env("ACCESS_TYPE")) config.accessType = env("ACCESS_TYPE");
+			if (env("PROMPT")) config.prompt = env("PROMPT");
+			break;
+		case "microsoft":
+			if (env("TENANT_ID")) config.tenantId = env("TENANT_ID");
+			if (env("AUTHORITY")) config.authority = env("AUTHORITY");
+			if (env("PROMPT")) config.prompt = env("PROMPT");
+			break;
+		case "tiktok":
+		case "figma":
+			if (env("CLIENT_KEY")) config.clientKey = env("CLIENT_KEY");
+			break;
+		case "cognito":
+			if (env("DOMAIN")) config.domain = env("DOMAIN");
+			if (env("REGION")) config.region = env("REGION");
+			if (env("USERPOOL_ID")) config.userPoolId = env("USERPOOL_ID");
+			break;
+		case "facebook":
+			if (env("SCOPES")) config.scopes = parseList(env("SCOPES"));
+			if (env("FIELDS")) config.fields = parseList(env("FIELDS"));
+			break;
+		case "paypal":
+			if (env("ENVIRONMENT")) config.environment = env("ENVIRONMENT");
+			if (env("REQUEST_SHIPPING_ADDRESS"))
+				config.requestShippingAddress =
+					env("REQUEST_SHIPPING_ADDRESS") === "true";
+			break;
+		case "salesforce":
+			if (env("ENVIRONMENT")) config.environment = env("ENVIRONMENT");
+			if (env("LOGIN_URL")) config.loginUrl = env("LOGIN_URL");
+			if (env("REDIRECT_URI")) config.redirectUri = env("REDIRECT_URI");
+			break;
+		case "slack":
+			if (env("TEAM_ID")) config.team = env("TEAM_ID");
+			break;
+		case "discord":
+			if (env("PERMISSIONS"))
+				config.permissions =
+					env("PERMISSIONS")
+						?.split(",")
+						.map(Number)
+						.reduce((a, v) => a | v, 0) ?? undefined;
+			break;
+		case "line":
+			if (env("REDIRECT_URI")) config.redirectUri = env("REDIRECT_URI");
+			if (env("SCOPE")) config.scope = parseList(env("SCOPE"));
+			if (env("DISABLE_DEFAULT_SCOPE"))
+				config.disabledDefaultScope = env("DISABLE_DEFAULT_SCOPE") === "true";
+			break;
+		case "linear":
+		case "reddit":
+		case "vercel":
+		case "paybin":
+			if (env("SCOPE")) config.scope = parseList(env("SCOPE"));
+			if (provider === "reddit" && env("DURATION"))
+				config.duration = env("DURATION");
 	}
-	if (provider === "apple" && acc[provider]) {
-		const bundleId =
-			process.env[`${provider.toUpperCase()}_APP_BUNDLE_IDENTIFIER`];
-		if (bundleId && bundleId.length > 0) {
-			acc[provider].appBundleIdentifier = bundleId;
-		}
-	}
-	if (provider === "gitlab" && acc[provider]) {
-		const issuer = process.env[`${provider.toUpperCase()}_ISSUER`];
-		if (issuer && issuer.length > 0) {
-			acc[provider].issuer = issuer;
-		}
-	}
-	if (provider === "google" && acc[provider]) {
-		const prompt = process.env[`${provider.toUpperCase()}_PROMPT`];
-		const accessType = process.env[`${provider.toUpperCase()}_ACCESS_TYPE`];
-		if (accessType && accessType.length > 0) {
-			acc[provider].accessType = accessType;
-		}
-		if (prompt && prompt.length > 0) {
-			acc[provider].prompt = prompt;
-		}
-	}
-	if (provider === "microsoft" && acc[provider]) {
-		acc[provider].tenantId = "common";
-		acc[provider].requireSelectAccount = true;
-	}
-	if (provider === "tiktok" && acc[provider]) {
-		const key = process.env[`${provider.toUpperCase()}_CLIENT_KEY`];
-		if (key && key.length > 0) {
-			acc[provider].clientKey = key;
-		}
-	}
-	if (provider === "cognito" && acc[provider]) {
-		const domain = process.env[`${provider.toUpperCase()}_DOMAIN`];
-		const region = process.env[`${provider.toUpperCase()}_REGION`];
-		const userPoolId = process.env[`${provider.toUpperCase()}_USERPOOL_ID`];
-		if (domain && domain.length > 0) {
-			acc[provider].domain = domain;
-		}
-		if (region && region.length > 0) {
-			acc[provider].region = region;
-		}
-		if (userPoolId && userPoolId.length > 0) {
-			acc[provider].userPoolId = userPoolId;
-		}
-	}
-	if (provider === "facebook" && acc[provider]) {
-		const scopes = process.env[`${provider.toUpperCase()}_SCOPES`];
-		const fields = process.env[`${provider.toUpperCase()}_FIELDS`];
-		if (scopes && scopes.length > 0) {
-			acc[provider].scopes = scopes.split(",").map((s) => s.trim());
-		}
-		if (fields && fields.length > 0) {
-			acc[provider].fields = fields.split(",").map((f) => f.trim());
-		}
-	}
-	if (provider === "figma" && acc[provider]) {
-		const clientKey = process.env[`${provider.toUpperCase()}_CLIENT_KEY`];
-		if (clientKey && clientKey.length > 0) {
-			acc[provider].clientKey = clientKey;
-		}
-	}
-	if ((provider === "paypal" || provider === "salesforce") && acc[provider]) {
-		const environment = process.env[`${provider.toUpperCase()}_ENVIRONMENT`];
-		if (environment && environment.length > 0) {
-			acc[provider].environment = environment;
-		}
-		if (provider === "paypal") {
-			const requestShippingAddress =
-				process.env[`${provider.toUpperCase()}_REQUEST_SHIPPING_ADDRESS`];
-			if (requestShippingAddress && requestShippingAddress.length > 0) {
-				acc[provider].requestShippingAddress =
-					requestShippingAddress === "true";
-			}
-		}
-		if (provider === "salesforce") {
-			const loginUrl = process.env[`${provider.toUpperCase()}_LOGIN_URL`];
-			const redirectUri = process.env[`${provider.toUpperCase()}_REDIRECT_URI`];
-			if (loginUrl && loginUrl.length > 0) {
-				acc[provider].loginUrl = loginUrl;
-			}
-			if (redirectUri && redirectUri.length > 0) {
-				acc[provider].redirectUri = redirectUri;
-			}
-		}
-	}
-	if (provider === "slack" && acc[provider]) {
-		const team = process.env[`${provider.toUpperCase()}_TEAM_ID`];
-		if (team && team.length > 0) {
-			acc[provider].team = team;
-		}
-	}
-	if (provider === "microsoft" && acc[provider]) {
-		const tenantId = process.env[`${provider.toUpperCase()}_TENANT_ID`];
-		const authority = process.env[`${provider.toUpperCase()}_AUTHORITY`];
-		const prompt = process.env[`${provider.toUpperCase()}_PROMPT`];
-		if (tenantId && tenantId.length > 0) {
-			acc[provider].tenantId = tenantId;
-		}
-		if (authority && authority.length > 0) {
-			acc[provider].authority = authority;
-		}
-		if (prompt && prompt.length > 0) {
-			acc[provider].prompt = prompt;
-		}
-	}
-	if (provider === "discord" && acc[provider]) {
-		const permissions = process.env[`${provider.toUpperCase()}_PERMISSIONS`];
-		if (permissions && permissions.length > 0) {
-			// Should convert the string to a number or bitwise value
-			acc[provider].permissions = permissions
-				.split(",")
-				.map(Number)
-				.reduce((acc, val) => acc | val, 0);
-		}
-	}
-	if (provider === "line" && acc[provider]) {
-		const redirectUri = process.env[`${provider.toUpperCase()}_REDIRECT_URI`];
-		const scope = process.env[`${provider.toUpperCase()}_SCOPE`];
-		const disableDefaultScope =
-			process.env[`${provider.toUpperCase()}_DISABLE_DEFAULT_SCOPE`];
-		if (redirectUri && redirectUri.length > 0) {
-			acc[provider].redirectUri = redirectUri;
-		}
-		if (scope && scope.length > 0) {
-			acc[provider].scope = scope.split(",").map((s) => s.trim());
-		}
-		if (disableDefaultScope && disableDefaultScope.length > 0) {
-			acc[provider].disabledDefaultScope = disableDefaultScope === "true";
-		}
-	}
-	if (provider === "linear" && acc[provider]) {
-		const scope = process.env[`${provider.toUpperCase()}_SCOPE`];
-		if (scope && scope.length > 0) {
-			acc[provider].scope = scope.split(",").map((s) => s.trim());
-		}
-	}
-	if (provider === "reddit" && acc[provider]) {
-		const duration = process.env[`${provider.toUpperCase()}_DURATION`];
-		const scope = process.env[`${provider.toUpperCase()}_SCOPE`];
-		if (duration && duration.length > 0) {
-			acc[provider].duration = duration;
-		}
-		if (scope && scope.length > 0) {
-			acc[provider].scope = scope.split(",").map((s) => s.trim());
-		}
-	}
-	if (provider === "vercel" && acc[provider]) {
-		const scope = process.env[`${provider.toUpperCase()}_SCOPE`];
-		if (scope && scope.length > 0) {
-			acc[provider].scope = scope.split(",").map((s) => s.trim());
-		}
-	}
-	if (provider === "paybin" && acc[provider]) {
-		const scope = process.env[`${provider.toUpperCase()}_SCOPE`];
-		if (scope && scope.length > 0) {
-			acc[provider].scope = scope.split(",").map((s) => s.trim());
-		}
-	}
+
+	if (Object.values(config).some((v) => v !== undefined)) acc[provider] = config;
 	return acc;
 }, {});
 
