@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import "dotenv/config";
-import { auth, configuredProviders } from "./auth";
+import { auth } from "./auth";
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
 
